@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>기억력 게임</title>
+  <style>
+    /* CSS 코드 */
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      background-color: #f5f5f5;
+      flex-direction: column;
+    }
+
+    h1 {
+      font-size: 2em;
+      margin-bottom: 20px;
+    }
+
+    #gameBoard {
+      display: grid;
+      grid-template-columns: repeat(8, 80px);
+      grid-gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .card {
+      width: 80px;
+      height: 80px;
+      background-color: #ccc;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 24px;
+      cursor: pointer;
+      border-radius: 5px;
+    }
+
+    .card.flipped {
+      color: white;
+    }
+
+    #resetButton {
+      padding: 10px 20px;
+      font-size: 16px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      cursor: pointer;
+      border-radius: 5px;
+    }
+
+    #resetButton:hover {
+      background-color: #45a049;
+    }
+  </style>
+</head>
+<body>
+  <h1>기억력 게임</h1>
+  <div id="gameBoard"></div>
+  <button id="resetButton">게임 초기화</button>
+
+  <script>
+    // 자바스크립트 코드
+    const gameBoard = document.getElementById('gameBoard');
+    const resetButton = document.getElementById('resetButton');
+    let cards = [
+      { value: 'A', color: 'red' },
+      { value: 'A', color: 'red' },
+      { value: 'B', color: 'blue' },
+      { value: 'B', color: 'blue' },
+      { value: 'C', color: 'green' },
+      { value: 'C', color: 'green' },
+      { value: 'D', color: 'orange' },
+      { value: 'D', color: 'orange' },
+      { value: 'E', color: 'purple' },
+      { value: 'E', color: 'purple' },
+      { value: 'F', color: 'yellow' },
+      { value: 'F', color: 'yellow' },
+      { value: 'G', color: 'pink' },
+      { value: 'G', color: 'pink' },
+      { value: 'H', color: 'cyan' },
+      { value: 'H', color: 'cyan' },
+      { value: 'I', color: 'lime' },
+      { value: 'I', color: 'lime' },
+      { value: 'J', color: 'salmon' },
+      { value: 'J', color: 'salmon' },
+      { value: 'K', color: 'gold' },
+      { value: 'K', color: 'gold' },
+      { value: 'L', color: 'lightblue' },
+      { value: 'L', color: 'lightblue' },
+      { value: 'M', color: 'lightgreen' },
+      { value: 'M', color: 'lightgreen' },
+      { value: 'N', color: 'coral' },
+      { value: 'N', color: 'coral' },
+      { value: 'O', color: 'plum' },
+      { value: 'O', color: 'plum' },
+      { value: 'P', color: 'silver' },
+      { value: 'P', color: 'silver' }
+    ]; // 카드 쌍과 색상, 16쌍
+    let flippedCards = [];
+    let matchedCards = 0;
+
+    // 카드 섞기 함수
+    function shuffleCards() {
+      cards = cards.sort(() => Math.random() - 0.5);  // 카드를 랜덤하게 섞어
+    }
+
+    // 카드 요소 만들기
+    function createCards() {
+      gameBoard.innerHTML = '';  // 게임 보드를 초기화
+      cards.forEach(card => {
+        const cardElement = document.createElement('div');
+        cardElement.classList.add('card');
+        cardElement.dataset.value = card.value;  // 카드에 값 설정
+        cardElement.dataset.color = card.color;  // 카드에 색상 설정
+        gameBoard.appendChild(cardElement);
+      });
+    }
+
+    // 카드 뒤집기
+    function flipCard(card) {
+      card.classList.add('flipped');
+      card.style.backgroundColor = card.dataset.color;  // 카드가 뒤집힐 때 색상 변경
+      flippedCards.push(card);
+
+      // 두 카드가 뒤집혔을 때 비교
+      if (flippedCards.length === 2) {
+        if (flippedCards[0].dataset.value === flippedCards[1].dataset.value) {
+          matchedCards++;
+          flippedCards = [];
+
+          // 모든 카드가 맞추어졌을 때 게임 종료
+          if (matchedCards === cards.length / 2) {
+            setTimeout(() => alert('게임 성공!'), 500);
+          }
+        } else {
+          setTimeout(() => {
+            flippedCards.forEach(card => {
+              card.classList.remove('flipped');
+              card.style.backgroundColor = '#ccc';  // 틀린 카드는 다시 기본 색으로
+            });
+            flippedCards = [];
+          }, 250);
+        }
+      }
+    }
+
+    // 클릭 이벤트 처리
+    gameBoard.addEventListener('click', function(event) {
+      const clickedCard = event.target;
+
+      // 카드만 클릭 가능하고, 이미 뒤집힌 카드는 클릭하지 않게 하기
+      if (clickedCard.classList.contains('card') && !clickedCard.classList.contains('flipped')) {
+        flipCard(clickedCard);
+      }
+    });
+
+    // 초기화 버튼 클릭 시 게임 재시작
+    resetButton.addEventListener('click', function() {
+      matchedCards = 0;
+      flippedCards = [];
+      shuffleCards(); // 카드 섞기
+      createCards(); // 카드 다시 생성
+    });
+
+    // 게임 시작
+    shuffleCards();
+    createCards();
+  </script>
+</body>
+</html>
