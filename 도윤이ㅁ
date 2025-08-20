@@ -1,47 +1,94 @@
-// App.jsx
-import { useEffect, useRef } from "react";
-import { fabric } from "fabric";
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>간단한 웹 CAD</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- Fabric.js CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/6.0.0/fabric.min.js"></script>
+  <style>
+    body {
+      margin: 0;
+      font-family: sans-serif;
+      background: #fafafa;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+    }
+    h1 {
+      font-size: 24px;
+      margin-bottom: 20px;
+    }
+    canvas {
+      border: 2px solid #ccc;
+      border-radius: 12px;
+      box-shadow: 2px 2px 10px rgba(0,0,0,0.1);
+    }
+    .toolbar {
+      margin-bottom: 15px;
+    }
+    button {
+      margin: 0 5px;
+      padding: 6px 12px;
+      border: none;
+      border-radius: 6px;
+      background: #007bff;
+      color: white;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #0056b3;
+    }
+  </style>
+</head>
+<body>
+  <h1>간단한 웹 CAD</h1>
 
-export default function App() {
-  const canvasRef = useRef(null);
+  <div class="toolbar">
+    <button onclick="addRect()">사각형 추가</button>
+    <button onclick="addCircle()">원 추가</button>
+    <button onclick="toggleDraw()">펜 모드</button>
+    <button onclick="clearCanvas()">전체 지우기</button>
+  </div>
 
-  useEffect(() => {
+  <canvas id="c" width="800" height="600"></canvas>
+
+  <script>
     const canvas = new fabric.Canvas("c", {
-      width: 800,
-      height: 600,
-      backgroundColor: "#f8f9fa",
+      backgroundColor: "#f8f9fa"
     });
-    canvasRef.current = canvas;
 
-    // 사각형 추가
-    const rect = new fabric.Rect({
-      left: 100,
-      top: 100,
-      fill: "skyblue",
-      width: 100,
-      height: 100,
-    });
-    canvas.add(rect);
+    function addRect() {
+      const rect = new fabric.Rect({
+        left: 100,
+        top: 100,
+        fill: "skyblue",
+        width: 100,
+        height: 100
+      });
+      canvas.add(rect);
+    }
 
-    // 원 추가
-    const circle = new fabric.Circle({
-      left: 300,
-      top: 200,
-      radius: 50,
-      fill: "lightgreen",
-    });
-    canvas.add(circle);
+    function addCircle() {
+      const circle = new fabric.Circle({
+        left: 300,
+        top: 200,
+        radius: 50,
+        fill: "lightgreen"
+      });
+      canvas.add(circle);
+    }
 
-    // 자유 그리기 모드 (펜)
-    canvas.isDrawingMode = false;
+    function toggleDraw() {
+      canvas.isDrawingMode = !canvas.isDrawingMode;
+      alert("펜 모드: " + (canvas.isDrawingMode ? "켜짐" : "꺼짐"));
+    }
 
-    return () => canvas.dispose();
-  }, []);
-
-  return (
-    <div className="flex flex-col items-center p-4">
-      <h1 className="text-2xl font-bold mb-4">간단한 웹 CAD</h1>
-      <canvas id="c" className="border shadow-lg rounded-xl"></canvas>
-    </div>
-  );
-}
+    function clearCanvas() {
+      canvas.clear();
+      canvas.setBackgroundColor("#f8f9fa", canvas.renderAll.bind(canvas));
+    }
+  </script>
+</body>
+</html>
