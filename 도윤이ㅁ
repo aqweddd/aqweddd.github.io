@@ -1,0 +1,47 @@
+// App.jsx
+import { useEffect, useRef } from "react";
+import { fabric } from "fabric";
+
+export default function App() {
+  const canvasRef = useRef(null);
+
+  useEffect(() => {
+    const canvas = new fabric.Canvas("c", {
+      width: 800,
+      height: 600,
+      backgroundColor: "#f8f9fa",
+    });
+    canvasRef.current = canvas;
+
+    // 사각형 추가
+    const rect = new fabric.Rect({
+      left: 100,
+      top: 100,
+      fill: "skyblue",
+      width: 100,
+      height: 100,
+    });
+    canvas.add(rect);
+
+    // 원 추가
+    const circle = new fabric.Circle({
+      left: 300,
+      top: 200,
+      radius: 50,
+      fill: "lightgreen",
+    });
+    canvas.add(circle);
+
+    // 자유 그리기 모드 (펜)
+    canvas.isDrawingMode = false;
+
+    return () => canvas.dispose();
+  }, []);
+
+  return (
+    <div className="flex flex-col items-center p-4">
+      <h1 className="text-2xl font-bold mb-4">간단한 웹 CAD</h1>
+      <canvas id="c" className="border shadow-lg rounded-xl"></canvas>
+    </div>
+  );
+}
