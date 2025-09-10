@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <title>뱃빛(햇빛) 그림자 시뮬레이션 — Boat Sun Shadow CAD</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    html,body{height:100%;margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,'Noto Sans KR',sans-serif}
+    #app{height:100vh;display:flex;}
+    #canvasWrap{flex:1;position:relative}
+    #ui{width:360px;padding:12px;background:#f7f7f8;border-left:1px solid #e6e6e6}
+    label{display:block;margin:8px 0 4px;font-weight:600}
+    button{margin-right:8px}
+    #info{margin-top:12px;font-size:13px;color:#333}
+    #credits{position:absolute;left:8px;bottom:8px;background:rgba(255,255,255,0.7);padding:6px;border-radius:6px;font-size:12px}
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div id="canvasWrap"></div>
+    <div id="ui">
+      <h3>뱃빛(햇빛) 그림자 시뮬레이션</h3>
+      <p>시간(아침·점심·저녁)에 따라 햇빛(직사광) 위치와 그림자를 보여줍니다. 기본 위치: 서울(37.5665,126.9780).</p>
+
+      <label>날짜</label>
+      <input id="date" type="date" value="2025-09-10" />
+
+      <label>시간 선택</label>
+      <div>
+        <button id="btnMorning">아침 (08:00)</button>
+        <button id="btnNoon">점심 (12:00)</button>
+        <button id="btnEvening">저녁 (18:00)</button>
+      </div>
+
+      <label>위치 (위도, 경도)</label>
+      <div>
+        <input id="lat" type="number" step="0.0001" value="37.5665" style="width:140px" />
+        <input id="lon" type="number" step="0.0001" value="126.9780" style="width:140px" />
+      </div>
+
+      <label>그림자 강도</label>
+      <input id="intensity" type="range" min="0" max="2" step="0.05" value="1" />
+
+      <div id="info">
+        <div>태양 방위각(Azimuth): <span id="azi">-</span></div>
+        <div>태양 고도(Altitude): <span id="alt">-</span></div>
+        <div>빛 방향 벡터: <span id="vec">-</span></div>
+      </div>
+
+      <div style="margin-top:12px;font-size:13px;color:#555">
+        사용법: 날짜와 시간을 선택하면 장면에 햇빛이 바뀌고 그림자가 실시간으로 업데이트됩니다.
+      </div>
+    </div>
+  </div>
+
+  <div id="credits">Three.js + SunCalc</div>
+
+  <!-- Three.js CDN -->
+  <script src="https://unpkg.com/three@0.156.0/build/three.min.js"></script>
+  <script src="https://unpkg.com/three@0.156.0/examples/js/controls/OrbitControls.js"></script>
+  <!-- SunCalc for sun position calculations -->
+  <script src="https://unpkg.com/suncalc@1.9.0/suncalc.js"></script>
+
+  <script>
+    // --- 기본 설정 ---
+    const seoulOffset = 9; // 서울 UTC+9. (우리는 명시적으로 서울 시간대의 날짜/시간을 계산함)
+    const canvasWrap = document.getElementById('canvasWrap');
+    const dateInput = document.getElementById('date');
+    const latInput = document.getElementById('lat');
+    const lonInput = document.getElementById('lon');
+    const intensityInput = document.getElementById('intensity');
+    const aziEl = document.getElementById('azi');
+    const altEl = document.getElementById('alt');
+    const vecEl = document.getElementById('vec');
+
+    // Three.js 기본 씬
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0xeceff1);
+
+    const renderer = new THREE.WebGLRenderer({antialias:true});
+    renderer.setSize(window.innerWidth - 360, window.innerHeight);
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    canvasWrap.appendChild(renderer.domElement);
+
+    const camera = new THREE.PerspectiveCamera(45, (window.innerWidth-360)/window.innerHeight, 0.1, 2000);
+    camera.position.set(10,8,12);
+
+    const controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.target.set(0,0.7,0);
+    controls.update();
+
+    // 지면
+    const groundGeo = new THREE.PlaneGeometry(100,100);
+    const groundMat = new THREE.MeshStandardMaterial({color:0x9fc5e8, roughness:1, metalness:0});
+    const ground = new THREE.Mesh(groundGeo, groundMat);
+    ground.rotation.x = -Math.PI/2;
+    ground.receiveShadow = true;
+    scene.add(ground);
+
+    // 해안/물 느낌을 주는 얇은 박스
+    const water = new THREE.Mesh(new THREE.BoxGeometry(30,0.02,30), new THREE.MeshStandardMaterial({color:0x66aaff,transparent:true,opacity:0.6}));
+    water.position.set(0,0.01,0);
+    scene.add(water);
+
+    // 간단한 '배' 모델 (Hull + cabin)
+    const boat = new THREE.Group();
+    // hull
+    const hullGeo = new THREE.BoxGeometry(3.6,0.6,1.4);
+    hullGeo.translate(0, -0.2,0);
+    const hullMat = new THREE.MeshStandardMaterial({color:0x8b4513, roughness:0.6});
+    const hull = new THREE.Mesh(hullGeo, hullMat);
+    hull.castShadow = true;
+    hull.receiveShadow = true;
+    // bow (앞부분 깎기)
+    hull.geometry.applyMatrix4(new THREE.Matrix4().makeRotationY(0));
+
+    // cabin
+    const cabin = new THREE.Mesh(new THREE.BoxGeometry(1.2,0.7,0.9), new THREE.MeshStandardMaterial({color:0xffffff, roughness:0.7}));
+    cabin.position.set(0.2,0.45,0);
+    cabin.castShadow = true;
+
+    boat.add(hull);
+    boat.add(cabin);
+    boat.position.set(0,0.35,0);
+    scene.add(boat);
+
+    // 보조 물체: 돛대
+    const mast = new THREE.Mesh(new THREE.CylinderGeometry(0.03,0.03,2), new THREE.MeshStandardMaterial({color:0x333333}));
+    mast.position.set(-0.9,1.35,0);
+    mast.castShadow = true;
+    boat.add(mast);
+
+    // 환경광
+    const ambient = new THREE.AmbientLight(0xffffff, 0.25);
+    scene.add(ambient);
+
+    // 태양(light) — DirectionalLight으로 그림자 생성
+    const sun = new THREE.DirectionalLight(0xffffff, parseFloat(intensityInput.value));
+    sun.castShadow = true;
+    sun.shadow.mapSize.width = 2048;
+    sun.shadow.mapSize.height = 2048;
+    sun.shadow.camera.near = 0.5;
+    sun.shadow.camera.far = 500;
+    sun.shadow.camera.left = -30;
+    sun.shadow.camera.right = 30;
+    sun.shadow.camera.top = 30;
+    sun.shadow.camera.bottom = -30;
+    scene.add(sun);
+
+    // helper for debugging shadow camera (comment out to hide)
+    // const helper = new THREE.CameraHelper(sun.shadow.camera); scene.add(helper);
+
+    // 초기 시간 설정
+    function getSeoulUTCDate(year, month, day, hour, minute=0){
+      // Seoul is UTC+9. We construct a Date in UTC that corresponds to the target local time in Seoul.
+      // Date.UTC(year,month-1,day,h-minOffset,minute,0)
+      const utcMillis = Date.UTC(year, month-1, day, hour - seoulOffset, minute, 0);
+      return new Date(utcMillis);
+    }
+
+    function updateSunFor(year,month,day,hour){
+      const lat = parseFloat(latInput.value);
+      const lon = parseFloat(lonInput.value);
+      const dateUTC = getSeoulUTCDate(year, month, day, hour);
+      // SunCalc 사용
+      const pos = SunCalc.getPosition(dateUTC, lat, lon); // returns {azimuth, altitude}
+      const azimuth = pos.azimuth; // radians
+      const altitude = pos.altitude; // radians
+
+      // Convert SunCalc azimuth/altitude to a directional vector for Three.js
+      // SunCalc.azimuth: measured from south to west (-PI..PI). We'll convert to a conventional vector roughly.
+      // Vector math (approx):
+      const x = Math.cos(altitude) * Math.sin(azimuth);
+      const y = Math.sin(altitude);
+      const z = Math.cos(altitude) * Math.cos(azimuth);
+      const sunDir = new THREE.Vector3(x, y, z).normalize();
+
+      // Place the directional light far away opposite to sun direction so light shines from sunDir
+      const distance = 120;
+      sun.position.copy(sunDir.clone().multiplyScalar(distance));
+      sun.target.position.set(0,0,0);
+      sun.intensity = parseFloat(intensityInput.value);
+      sun.castShadow = true;
+
+      // update info text
+      aziEl.innerText = (azimuth * 180/Math.PI).toFixed(1) + '°';
+      altEl.innerText = (altitude * 180/Math.PI).toFixed(1) + '°';
+      vecEl.innerText = `(${sunDir.x.toFixed(2)}, ${sunDir.y.toFixed(2)}, ${sunDir.z.toFixed(2)})`;
+    }
+
+    // 버튼 이벤트
+    document.getElementById('btnMorning').addEventListener('click', ()=>{
+      const d = new Date(dateInput.value);
+      updateSunFor(d.getFullYear(), d.getMonth()+1, d.getDate(), 8);
+    });
+    document.getElementById('btnNoon').addEventListener('click', ()=>{
+      const d = new Date(dateInput.value);
+      updateSunFor(d.getFullYear(), d.getMonth()+1, d.getDate(), 12);
+    });
+    document.getElementById('btnEvening').addEventListener('click', ()=>{
+      const d = new Date(dateInput.value);
+      updateSunFor(d.getFullYear(), d.getMonth()+1, d.getDate(), 18);
+    });
+
+    intensityInput.addEventListener('input', ()=>{
+      sun.intensity = parseFloat(intensityInput.value);
+    });
+
+    latInput.addEventListener('change', ()=>{ document.getElementById('btnNoon').click(); });
+    lonInput.addEventListener('change', ()=>{ document.getElementById('btnNoon').click(); });
+
+    // 창 사이즈에 맞춰 리사이즈
+    window.addEventListener('resize', ()=>{
+      renderer.setSize(window.innerWidth - 360, window.innerHeight);
+      camera.aspect = (window.innerWidth - 360) / window.innerHeight;
+      camera.updateProjectionMatrix();
+    });
+
+    // 간단한 애니메이션 루프
+    function animate(){
+      requestAnimationFrame(animate);
+      renderer.render(scene, camera);
+    }
+
+    // 초기 호출: 오늘 날짜의 점심
+    (function init(){
+      const today = new Date();
+      // default date input already set; but keep it consistent
+      dateInput.value = today.toISOString().slice(0,10);
+      document.getElementById('btnNoon').click();
+      animate();
+    })();
+  </script>
+</body>
+</html>
