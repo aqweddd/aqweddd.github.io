@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>데일리 리마인더</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #e0f2fe 0%, #ddd6fe 100%);
+            min-height: 100vh;
+            padding-bottom: 2rem;
+        }
+
+        .notification-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            z-index: 1000;
+        }
+
+        .notification-toggle {
+            width: 100%;
+            padding: 1rem 1.5rem;
+            background: white;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .notification-toggle:hover {
+            background: #f9fafb;
+        }
+
+        .notification-toggle-left {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .bell-icon {
+            color: #4f46e5;
+            font-size: 1.5rem;
+        }
+
+        .notification-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+        }
+
+        .notification-content {
+            max-height: 24rem;
+            overflow-y: auto;
+            border-top: 1px solid #e5e7eb;
+            background: white;
+            display: none;
+        }
+
+        .notification-content.show {
+            display: block;
+        }
+
+        .notification-item {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid #f3f4f6;
+            transition: background 0.2s;
+        }
+
+        .notification-item:hover {
+            background: #eef2ff;
+        }
+
+        .notification-item-content {
+            display: flex;
+            align-items: start;
+            gap: 0.75rem;
+        }
+
+        .notification-empty {
+            padding: 2rem 1.5rem;
+            text-align: center;
+            color: #9ca3af;
+        }
+
+        .main-content {
+            padding-top: 5rem;
+            padding-left: 1rem;
+            padding-right: 1rem;
+            max-width: 56rem;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-size: 1.875rem;
+            font-weight: bold;
+            color: #111827;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .schedule-card {
+            background: white;
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.07);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .schedule-card.today {
+            background: linear-gradient(135deg, #4f46e5 0%, #9333ea 100%);
+            color: white;
+        }
+
+        .schedule-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+
+        .schedule-header-left {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .schedule-card.today .schedule-header-left {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .schedule-badge {
+            font-size: 0.875rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+        }
+
+        .schedule-card:not(.today) .schedule-badge {
+            background: #f3f4f6;
+            color: #6b7280;
+        }
+
+        .schedule-card.today .schedule-badge {
+            background: rgba(255,255,255,0.2);
+        }
+
+        .schedule-empty {
+            text-align: center;
+            padding: 1rem;
+            color: #d1d5db;
+        }
+
+        .schedule-card.today .schedule-empty {
+            color: rgba(255,255,255,0.8);
+        }
+
+        .schedule-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .schedule-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+        }
+
+        .schedule-card:not(.today) .schedule-item {
+            background: #f9fafb;
+        }
+
+        .schedule-card.today .schedule-item {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            padding: 1rem;
+        }
+
+        .schedule-item.yesterday {
+            background: #f9fafb;
+        }
+
+        .schedule-item.tomorrow {
+            background: #eff6ff;
+        }
+
+        .schedule-checkbox {
+            width: 1.25rem;
+            height: 1.25rem;
+            cursor: pointer;
+            accent-color: #4f46e5;
+        }
+
+        .schedule-time {
+            min-width: 3.5rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .schedule-card:not(.today) .schedule-time {
+            color: #6b7280;
+        }
+
+        .schedule-card.today .schedule-time {
+            font-weight: 500;
+        }
+
+        .schedule-title {
+            flex: 1;
+        }
+
+        .schedule-title.completed {
+            text-decoration: line-through;
+            opacity: 0.6;
+        }
+
+        .schedule-card:not(.today) .schedule-title.completed {
+            color: #9ca3af;
+        }
+
+        .delete-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0.25rem;
+            border-radius: 0.25rem;
+            transition: background 0.2s;
+        }
+
+        .delete-btn:hover {
+            background: rgba(0,0,0,0.1);
+        }
+
+        .fab {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            width: 3.5rem;
+            height: 3.5rem;
+            border-radius: 50%;
+            background: #4f46e5;
+            color: white;
+            border: none;
+            box-shadow: 0 10px 15px rgba(0,0,0,0.2);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            transition: all 0.2s;
+        }
+
+        .fab:hover {
+            background: #4338ca;
+            transform: scale(1.1);
+        }
+
+        .add-form {
+            position: fixed;
+            bottom: 6.5rem;
+            right: 2rem;
+            background: white;
+            border-radius: 0.75rem;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            padding: 1.5rem;
+            width: 20rem;
+            display: none;
+        }
+
+        .add-form.show {
+            display: block;
+        }
+
+        .add-form h3 {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .form-group {
+            margin-bottom: 0.75rem;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 0.25rem;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 0.5rem 0.75rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #4f46e5;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 0.5rem;
+            background: #4f46e5;
+            color: white;
+            border: none;
+            border-radius: 0.5rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .submit-btn:hover {
+            background: #4338ca;
+        }
+
+        .chevron {
+            transition: transform 0.2s;
+        }
+
+        .chevron.up {
+            transform: rotate(180deg);
+        }
+    </style>
+</head>
+<body>
+    <!-- 알림 바 -->
+    <div class="notification-bar">
+        <button class="notification-toggle" onclick="toggleNotification()">
+            <div class="notification-toggle-left">
+                <span class="bell-icon">🔔</span>
+                <span class="notification-title">오늘의 일정 (<span id="today-count">0</span>)</span>
+            </div>
+            <span class="chevron" id="chevron">▼</span>
+        </button>
+        <div class="notification-content" id="notification-content">
+            <!-- 오늘 일정이 여기에 표시됩니다 -->
+        </div>
+    </div>
+
+    <!-- 메인 콘텐츠 -->
+    <div class="main-content">
+        <h1>일정 관리</h1>
+
+        <!-- 어제 일정 -->
+        <div class="schedule-card">
+            <div class="schedule-header">
+                <div class="schedule-header-left">
+                    <span>📅</span>
+                    <span>어제 (<span id="yesterday-date"></span>)</span>
+                </div>
+                <span class="schedule-badge"><span id="yesterday-progress">0/0</span> 완료</span>
+            </div>
+            <div id="yesterday-list" class="schedule-list"></div>
+        </div>
+
+        <!-- 오늘 일정 -->
+        <div class="schedule-card today">
+            <div class="schedule-header">
+                <div class="schedule-header-left">
+                    <span>📅</span>
+                    <span>오늘 (<span id="today-date"></span>)</span>
+                </div>
+                <span class="schedule-badge"><span id="today-progress">0/0</span> 완료</span>
+            </div>
+            <div id="today-list" class="schedule-list"></div>
+        </div>
+
+        <!-- 내일 일정 -->
+        <div class="schedule-card">
+            <div class="schedule-header">
+                <div class="schedule-header-left">
+                    <span>📅</span>
+                    <span>내일 (<span id="tomorrow-date"></span>)</span>
+                </div>
+                <span class="schedule-badge"><span id="tomorrow-count">0</span>개 일정</span>
+            </div>
+            <div id="tomorrow-list" class="schedule-list"></div>
+        </div>
+    </div>
+
+    <!-- 추가 버튼 -->
+    <button class="fab" onclick="toggleAddForm()">
+        <span id="fab-icon">+</span>
+    </button>
+
+    <!-- 일정 추가 폼 -->
+    <div class="add-form" id="add-form">
+        <h3>새 일정 추가</h3>
+        <div class="form-group">
+            <label>날짜</label>
+            <input type="date" id="input-date">
+        </div>
+        <div class="form-group">
+            <label>시간</label>
+            <input type="time" id="input-time" value="09:00">
+        </div>
+        <div class="form-group">
+            <label>일정</label>
+            <input type="text" id="input-title" placeholder="일정을 입력하세요">
+        </div>
+        <button class="submit-btn" onclick="addSchedule()">추가하기</button>
+    </div>
+
+    <script>
+        // 샘플 데이터
+        let schedules = [
+            { id: 1, date: '2025-10-14', time: '09:00', title: '팀 미팅', completed: true },
+            { id: 2, date: '2025-10-14', time: '14:00', title: '프로젝트 제안서 작성', completed: true },
+            { id: 3, date: '2025-10-15', time: '10:00', title: '클라이언트 미팅', completed: false },
+            { id: 4, date: '2025-10-15', time: '15:30', title: '코드 리뷰', completed: false },
+            { id: 5, date: '2025-10-15', time: '18:00', title: '운동', completed: false },
+            { id: 6, date: '2025-10-16', time: '11:00', title: '디자인 검토', completed: false },
+            { id: 7, date: '2025-10-16', time: '16:00', title: '주간 보고서 작성', completed: false },
+        ];
+
+        const today = '2025-10-15';
+        const yesterday = '2025-10-14';
+        const tomorrow = '2025-10-16';
+
+        // 날짜 포맷팅
+        function formatDate(dateStr) {
+            const date = new Date(dateStr);
+            return `${date.getMonth() + 1}월 ${date.getDate()}일`;
+        }
+
+        // 날짜별 일정 가져오기
+        function getSchedulesByDate(date) {
+            return schedules
+                .filter(s => s.date === date)
+                .sort((a, b) => a.time.localeCompare(b.time));
+        }
+
+        // 알림 토글
+        function toggleNotification() {
+            const content = document.getElementById('notification-content');
+            const chevron = document.getElementById('chevron');
+            content.classList.toggle('show');
+            chevron.classList.toggle('up');
+        }
+
+        // 추가 폼 토글
+        function toggleAddForm() {
+            const form = document.getElementById('add-form');
+            const icon = document.getElementById('fab-icon');
+            form.classList.toggle('show');
+            icon.textContent = form.classList.contains('show') ? '×' : '+';
+        }
+
+        // 완료 토글
+        function toggleComplete(id) {
+            const schedule = schedules.find(s => s.id === id);
+            if (schedule) {
+                schedule.completed = !schedule.completed;
+                render();
+            }
+        }
+
+        // 일정 삭제
+        function deleteSchedule(id) {
+            schedules = schedules.filter(s => s.id !== id);
+            render();
+        }
+
+        // 일정 추가
+        function addSchedule() {
+            const date = document.getElementById('input-date').value;
+            const time = document.getElementById('input-time').value;
+            const title = document.getElementById('input-title').value.trim();
+
+            if (!title) {
+                alert('일정을 입력해주세요');
+                return;
+            }
+
+            const newId = Math.max(...schedules.map(s => s.id), 0) + 1;
+            schedules.push({
+                id: newId,
+                date: date,
+                time: time,
+                title: title,
+                completed: false
+            });
+
+            document.getElementById('input-title').value = '';
+            toggleAddForm();
+            render();
+        }
+
+        // 일정 아이템 HTML 생성
+        function createScheduleItemHTML(schedule, showDelete = true) {
+            return `
+                <div class="schedule-item">
+                    <input type="checkbox" class="schedule-checkbox" 
+                           ${schedule.completed ? 'checked' : ''} 
+                           onchange="toggleComplete(${schedule.id})">
+                    <span class="schedule-time">${schedule.time}</span>
+                    <span class="schedule-title ${schedule.completed ? 'completed' : ''}">
+                        ${schedule.title}
+                    </span>
+                    ${showDelete ? `<button class="delete-btn" onclick="deleteSchedule(${schedule.id})">✕</button>` : ''}
+                </div>
+            `;
+        }
+
+        // 렌더링
+        function render() {
+            const yesterdaySchedules = getSchedulesByDate(yesterday);
+            const todaySchedules = getSchedulesByDate(today);
+            const tomorrowSchedules = getSchedulesByDate(tomorrow);
+
+            // 날짜 표시
+            document.getElementById('yesterday-date').textContent = formatDate(yesterday);
+            document.getElementById('today-date').textContent = formatDate(today);
+            document.getElementById('tomorrow-date').textContent = formatDate(tomorrow);
+
+            // 어제 일정
+            const yesterdayList = document.getElementById('yesterday-list');
+            if (yesterdaySchedules.length === 0) {
+                yesterdayList.innerHTML = '<p class="schedule-empty">일정이 없습니다</p>';
+            } else {
+                yesterdayList.innerHTML = yesterdaySchedules.map(s => createScheduleItemHTML(s, false)).join('');
+            }
+            const yesterdayCompleted = yesterdaySchedules.filter(s => s.completed).length;
+            document.getElementById('yesterday-progress').textContent = 
+                `${yesterdayCompleted}/${yesterdaySchedules.length}`;
+
+            // 오늘 일정
+            const todayList = document.getElementById('today-list');
+            if (todaySchedules.length === 0) {
+                todayList.innerHTML = '<p class="schedule-empty">일정이 없습니다</p>';
+            } else {
+                todayList.innerHTML = todaySchedules.map(s => createScheduleItemHTML(s, true)).join('');
+            }
+            const todayCompleted = todaySchedules.filter(s => s.completed).length;
+            document.getElementById('today-progress').textContent = 
+                `${todayCompleted}/${todaySchedules.length}`;
+            document.getElementById('today-count').textContent = todaySchedules.length;
+
+            // 내일 일정
+            const tomorrowList = document.getElementById('tomorrow-list');
+            if (tomorrowSchedules.length === 0) {
+                tomorrowList.innerHTML = '<p class="schedule-empty">일정이 없습니다</p>';
+            } else {
+                tomorrowList.innerHTML = tomorrowSchedules.map(s => createScheduleItemHTML(s, true)).join('');
+            }
+            document.getElementById('tomorrow-count').textContent = tomorrowSchedules.length;
+
+            // 알림 내용
+            const notificationContent = document.getElementById('notification-content');
+            if (todaySchedules.length === 0) {
+                notificationContent.innerHTML = '<div class="notification-empty">오늘 일정이 없습니다</div>';
+            } else {
+                notificationContent.innerHTML = todaySchedules.map(schedule => `
+                    <div class="notification-item">
+                        <div class="notification-item-content">
+                            <input type="checkbox" class="schedule-checkbox" 
+                                   ${schedule.completed ? 'checked' : ''} 
+                                   onchange="toggleComplete(${schedule.id})">
+                            <div style="flex: 1;">
+                                <div class="schedule-title ${schedule.completed ? 'completed' : ''}" 
+                                     style="font-weight: 500; color: #111827;">
+                                    ${schedule.title}
+                                </div>
+                                <div style="font-size: 0.875rem; color: #6b7280; margin-top: 0.25rem;">
+                                    🕐 ${schedule.time}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+        }
+
+        // 초기화
+        document.getElementById('input-date').value = today;
+        render();
+    </script>
+</body>
+</html>
