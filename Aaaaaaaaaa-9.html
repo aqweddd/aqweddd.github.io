@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>오송 벌집형 체육관 제안서</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;500;700&display=swap');
+        
+        :root {
+            --primary: #FFD700; /* 골드 (벌집 상징) */
+            --dark: #2C3E50;
+            --light: #ECF0F1;
+            --accent: #E67E22;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Noto Sans KR', sans-serif; overflow: hidden; background: #1a1a1a; }
+
+        .slider {
+            width: 100vw; height: 100vh;
+            display: flex; transition: transform 0.7s cubic-bezier(0.645, 0.045, 0.355, 1);
+        }
+
+        .slide {
+            min-width: 100vw; height: 100vh;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            padding: 5% 10%; background: white; position: relative;
+        }
+
+        /* 배경 육각형 디자인 */
+        .slide::after {
+            content: '⬢'; position: absolute; font-size: 40rem;
+            color: rgba(255, 215, 0, 0.05); z-index: 0; right: -10%; bottom: -10%;
+        }
+
+        .content { position: relative; z-index: 1; width: 100%; max-width: 1100px; }
+
+        h1 { font-size: 4rem; color: var(--dark); margin-bottom: 20px; line-height: 1.2; }
+        h2 { font-size: 2.8rem; color: var(--accent); margin-bottom: 40px; border-left: 10px solid var(--primary); padding-left: 20px; }
+        p { font-size: 1.5rem; color: #555; line-height: 1.6; margin-bottom: 20px; }
+
+        .grid { display: flex; gap: 40px; margin-top: 30px; }
+        .card { flex: 1; background: var(--light); padding: 30px; border-radius: 15px; border-bottom: 5px solid var(--primary); }
+        .card h3 { color: var(--dark); margin-bottom: 15px; font-size: 1.8rem; }
+        
+        .math { font-family: 'Times New Roman', serif; font-style: italic; background: #fff; padding: 10px; border-radius: 5px; font-size: 1.4rem; border: 1px dashed #ccc; }
+
+        .nav-hint { position: fixed; bottom: 20px; width: 100%; text-align: center; color: #999; font-size: 0.9rem; }
+        .controls { position: fixed; bottom: 30px; right: 30px; display: flex; gap: 10px; }
+        button { padding: 10px 20px; cursor: pointer; background: var(--dark); color: white; border: none; border-radius: 5px; }
+    </style>
+</head>
+<body>
+
+<div class="slider" id="slider">
+    <section class="slide" style="background: linear-gradient(135deg, #fff 60%, var(--primary) 100%);">
+        <div class="content">
+            <p style="color: var(--accent); font-weight: bold; letter-spacing: 3px;">ARCHITECTURAL PROPOSAL</p>
+            <h1>오송 벌집형<br>복합 커뮤니티 체육관</h1>
+            <p>수학적 최적화와 과학적 하중 분산을 적용한 미래형 공공 건축</p>
+            <div style="margin-top: 50px; font-weight: 500;">발표자 : [사용자 성함]</div>
+        </div>
+    </section>
+
+    <section class="slide">
+        <div class="content">
+            <h2>기획 배경: 왜 오송인가?</h2>
+            <div class="grid">
+                <div class="card">
+                    <h3>국가 바이오 클러스터</h3>
+                    <p>첨단 과학 도시 이미지에 부합하는 혁신적 랜드마크 필요</p>
+                </div>
+                <div class="card">
+                    <h3>정주 여건 강화</h3>
+                    <p>급증하는 오송역 인근 주민과 연구원들을 위한 다목적 문화 시설</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="slide">
+        <div class="content">
+            <h2>수리적 개념: 테셀레이션</h2>
+            <p>정육각형은 틈 없이 평면을 채울 수 있는 가장 효율적인 도형입니다.</p>
+            <div class="grid">
+                <div style="flex: 1.2;">
+                    <p><b>경제적 면적 확보:</b> 동일한 둘레 길이 대비 사각형보다 넓은 내부 면적을 가집니다.</p>
+                    <div class="math">정육각형 면적 $A = \frac{3\sqrt{3}}{2}s^2$</div>
+                </div>
+                <div class="card" style="flex: 0.8; background: #fef9e7;">
+                    <p>✔ 자재 사용량 15% 절감<br>✔ 공간 효율성 20% 향상</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="slide">
+        <div class="content">
+            <h2>과학적 원리: 하중 분산 시스템</h2>
+            <p>벌집 구조(Honeycomb)는 외부의 물리적 충격을 완벽하게 제어합니다.</p>
+            <div class="grid">
+                <div class="card">
+                    <h3>120도의 마법</h3>
+                    <p>세 방향으로 힘을 분산시켜 구조적 변형을 원천 차단합니다.</p>
+                </div>
+                <div class="card">
+                    <h3>무주(No-pillar) 설계</h3>
+                    <p>기둥 없이 넓은 천장을 지탱하여 대형 체육 경기 운영 가능.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="slide">
+        <div class="content">
+            <h2>건축 대상 및 활용</h2>
+            <div class="grid">
+                <div class="card" style="border-bottom-color: var(--dark);">
+                    <h3>Target</h3>
+                    <p>오송 연구원, KTX 이용객, 인근 단지 입주민</p>
+                </div>
+                <div class="card" style="border-bottom-color: var(--dark);">
+                    <h3>Usage</h3>
+                    <p>실내 스포츠, 바이오 컨퍼런스, 야간 주민 카페</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="slide">
+        <div class="content">
+            <h2>기대 효과</h2>
+            <ul style="list-style: none; font-size: 1.5rem; color: #444;">
+                <li style="margin-bottom: 20px;">🏢 <b>도시 브랜드:</b> '과학 도시 오송'의 시각적 정체성 확립</li>
+                <li style="margin-bottom: 20px;">🌱 <b>지속 가능성:</b> 구조적 효율을 통한 탄소 배출 저감 건축</li>
+                <li style="margin-bottom: 20px;">🛡️ <b>안전 거점:</b> 강력한 강성으로 재난 시 지역 방재 센터 역할</li>
+            </ul>
+        </div>
+    </section>
+
+    <section class="slide" style="background: var(--dark); color: white;">
+        <div class="content" style="text-align: center;">
+            <h1 style="color: var(--primary);">오송의 가치를 잇는<br>가장 견고한 디자인</h1>
+            <p style="color: #bdc3c7;">수학과 과학으로 완성된 오송의 새로운 심장입니다.</p>
+            <p style="margin-top: 50px;">감사합니다.</p>
+        </div>
+    </section>
+</div>
+
+<div class="nav-hint">방향키(←, →)를 사용하여 슬라이드를 이동하세요</div>
+<div class="controls">
+    <button onclick="move(-1)">PREV</button>
+    <button onclick="move(1)">NEXT</button>
+</div>
+
+<script>
+    let curr = 0;
+    const slider = id('slider');
+    const total = document.querySelectorAll('.slide').length;
+
+    function move(dir) {
+        curr = Math.max(0, Math.min(total - 1, curr + dir));
+        slider.style.transform = `translateX(-${curr * 100}vw)`;
+    }
+
+    function id(n) { return document.getElementById(n); }
+
+    window.addEventListener('keydown', (e) => {
+        if(e.key === 'ArrowRight') move(1);
+        if(e.key === 'ArrowLeft') move(-1);
+    });
+</script>
+
+</body>
+</html>
