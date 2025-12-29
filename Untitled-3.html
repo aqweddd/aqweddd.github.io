@@ -2,95 +2,267 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>간단한 2D CAD 프로그램</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>오송 벌집형 체육관 제안서 (Final)</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            background-color: #f4f4f4;
+        /* 한글 웹폰트 불러오기 (프리텐다드) */
+        @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+        
+        :root {
+            --primary: #F4B400; /* 벌집 골드색 */
+            --secondary: #1A237E; /* 깊은 남색 (신뢰감) */
+            --text: #333;
+            --bg-light: #F5F7FA;
         }
-        canvas {
-            border: 1px solid #000;
-            background-color: white;
+
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: 'Pretendard', sans-serif; background: #000; color: var(--text); overflow: hidden; height: 100vh; }
+
+        /* 슬라이드 전체 컨테이너 */
+        .slider-container {
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .slider {
+            display: flex;
+            width: 700vw; /* 슬라이드 7개 기준 */
+            height: 100%;
+            transition: transform 0.7s cubic-bezier(0.25, 1, 0.5, 1); /* 부드러운 넘김 효과 */
+        }
+
+        /* 개별 슬라이드 레이아웃 */
+        .slide {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            overflow: hidden;
+            position: relative;
+            background: var(--bg-light);
+        }
+
+        /* 왼쪽 텍스트 영역 */
+        .text-content {
+            flex: 1;
+            padding: 5% 4%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            z-index: 2;
+        }
+
+        /* 오른쪽 이미지 영역 */
+        .image-content {
+            flex: 1;
+            background-size: cover;
+            background-position: center;
+            position: relative;
+        }
+        /* 이미지 위에 어두운 오버레이 (글씨 잘 보이게) */
+        .image-content::after {
+            content: ''; position: absolute; top:0; left:0; width:100%; height:100%;
+            background: rgba(0,0,0,0.2);
+        }
+
+        /* 태블릿 세로 모드 대응 */
+        @media (max-width: 768px) {
+            .slide { flex-direction: column-reverse; }
+            .text-content { flex: 1.5; padding: 30px; }
+            .image-content { flex: 1; }
+        }
+
+        /* 타이포그래피 디자인 */
+        h1 { font-size: clamp(2.2rem, 5vw, 3.5rem); color: var(--secondary); line-height: 1.2; margin-bottom: 1.5rem; font-weight: 800; }
+        h2 { font-size: clamp(1.8rem, 4vw, 2.5rem); color: var(--secondary); margin-bottom: 1.5rem; display: inline-block; position: relative; }
+        h2::after { content:''; display: block; width: 60px; height: 5px; background: var(--primary); margin-top: 10px; }
+        
+        p.lead { font-size: 1.25rem; color: #555; line-height: 1.7; margin-bottom: 1.5rem; font-weight: 500; }
+        p.detail { font-size: 1.1rem; color: #666; line-height: 1.6; margin-bottom: 1rem; }
+
+        /* 강조 박스 디자인 */
+        .highlight-box {
+            background: white;
+            border-left: 6px solid var(--primary);
+            padding: 20px 25px;
+            border-radius: 0 15px 15px 0;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+            margin-top: 20px;
+        }
+        .math-formula { font-family: serif; font-size: 1.4rem; color: var(--secondary); font-weight: bold; padding: 10px 0; display: block; }
+
+        /* 내비게이션 UI */
+        .controls {
+            position: fixed; bottom: 30px; right: 30px;
+            display: flex; gap: 15px; z-index: 10;
+        }
+        .btn {
+            width: 55px; height: 55px; border-radius: 50%; background: rgba(26, 35, 126, 0.8); color: white;
+            border: none; font-size: 24px; cursor: pointer; display: flex; justify-content: center; align-items: center;
+            backdrop-filter: blur(5px); transition: 0.3s;
+        }
+        .btn:active { background: var(--primary); transform: scale(0.95); }
+
+        .progress-bar {
+            position: fixed; top: 0; left: 0; height: 5px; background: var(--primary);
+            width: 14.28%; transition: width 0.5s; z-index: 20;
         }
     </style>
 </head>
 <body>
-    <canvas id="cadCanvas" width="800" height="600"></canvas>
 
-    <script>
-        const canvas = document.getElementById('cadCanvas');
-        const ctx = canvas.getContext('2d');
+<div class="progress-bar" id="progress"></div>
 
-        // 초기 도형 위치
-        let shapes = [
-            { type: 'rectangle', x: 100, y: 100, width: 150, height: 100, color: 'red' },
-            { type: 'circle', x: 400, y: 200, radius: 50, color: 'blue' },
-            { type: 'line', x1: 100, y1: 300, x2: 500, y2: 300, color: 'green' }
-        ];
+<div class="slider-container">
+    <div class="slider" id="slider">
 
-        // 도형 그리기 함수
-        function drawShapes() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);  // 캔버스 클리어
-            shapes.forEach(shape => {
-                ctx.fillStyle = shape.color;
-                if (shape.type === 'rectangle') {
-                    ctx.fillRect(shape.x, shape.y, shape.width, shape.height);
-                } else if (shape.type === 'circle') {
-                    ctx.beginPath();
-                    ctx.arc(shape.x, shape.y, shape.radius, 0, Math.PI * 2);
-                    ctx.fill();
-                } else if (shape.type === 'line') {
-                    ctx.beginPath();
-                    ctx.moveTo(shape.x1, shape.y1);
-                    ctx.lineTo(shape.x2, shape.y2);
-                    ctx.strokeStyle = shape.color;
-                    ctx.lineWidth = 2;
-                    ctx.stroke();
-                }
-            });
-        }
+        <section class="slide">
+            <div class="text-content">
+                <p style="color: var(--primary); font-weight: 700; letter-spacing: 2px; margin-bottom: 10px;">OSONG INNOVATION ARCHITECTURE</p>
+                <h1>오송 벌집형(Hexagon)<br>커뮤니티 체육관 제안</h1>
+                <p class="lead">수학적 효율성과 과학적 강성이 결합된<br>오송의 새로운 미래형 랜드마크</p>
+                <div style="margin-top: 40px;">
+                    <p style="font-weight: bold; color: var(--secondary);">발표자: [발표자 성함 입력]</p>
+                </div>
+            </div>
+            <div class="image-content" style="background-image: url('https://source.unsplash.com/featured/?modern,architecture,geometric,building');"></div>
+        </section>
 
-        // 드래그로 도형 이동하기
-        let dragging = null;
-        let offsetX, offsetY;
+        <section class="slide">
+            <div class="text-content">
+                <h2>01. 기획 배경: 왜 오송인가?</h2>
+                <p class="lead">국가 바이오 클러스터의 중심, 오송에 걸맞은 스마트한 공간 솔루션이 필요합니다.</p>
+                <div class="highlight-box">
+                    <p class="detail">✅ <b>첨단 도시 정체성 확립:</b> 단순한 체육 시설을 넘어, 바이오·과학 도시의 이미지를 시각적으로 대변할 상징적 건축물이 요구됩니다.</p>
+                    <p class="detail" style="margin-top: 15px;">✅ <b>주민 정주 여건 개선:</b> 오송역 이용객 및 인근 연구원, 주민들의 급증하는 여가·커뮤니티 수요를 충족시켜야 합니다.</p>
+                </div>
+            </div>
+            <div class="image-content" style="background-image: url('https://source.unsplash.com/featured/?science,park,research,center');"></div>
+        </section>
 
-        canvas.addEventListener('mousedown', (e) => {
-            const { offsetX: mouseX, offsetY: mouseY } = e;
-            dragging = shapes.find(shape => {
-                if (shape.type === 'rectangle') {
-                    return mouseX >= shape.x && mouseX <= shape.x + shape.width &&
-                        mouseY >= shape.y && mouseY <= shape.y + shape.height;
-                } else if (shape.type === 'circle') {
-                    const distance = Math.sqrt(Math.pow(mouseX - shape.x, 2) + Math.pow(mouseY - shape.y, 2));
-                    return distance <= shape.radius;
-                }
-                return false;
-            });
-            if (dragging) {
-                offsetX = mouseX - dragging.x;
-                offsetY = mouseY - dragging.y;
-            }
-        });
+        <section class="slide">
+            <div class="text-content">
+                <h2>02. 수리적 설계: 테셀레이션</h2>
+                <p class="lead">자연이 선택한 가장 경제적인 도형, '정육각형'을 설계의 기본 단위로 사용합니다.</p>
+                <p class="detail">평면을 빈틈없이 채우는 테셀레이션(Tessellation) 기법 중, 육각형은 동일한 자재(둘레 길이)로 가장 넓은 내부 면적을 확보할 수 있습니다.</p>
+                <div class="highlight-box">
+                    <span class="math-formula">면적 효율 극대화: $A = \frac{3\sqrt{3}}{2}s^2$</span>
+                    <p class="detail" style="margin-top:10px;">➡ 한정된 부지와 예산 안에서 주민들이 사용할 실내 공간을 최대로 넓히는 <b>수학적 최적화 설계</b>입니다.</p>
+                </div>
+            </div>
+            <div class="image-content" style="background-image: url('https://source.unsplash.com/featured/?hexagon,pattern,architecture');"></div>
+        </section>
 
-        canvas.addEventListener('mousemove', (e) => {
-            if (dragging) {
-                dragging.x = e.offsetX - offsetX;
-                dragging.y = e.offsetY - offsetY;
-                drawShapes();
-            }
-        });
+        <section class="slide">
+            <div class="text-content">
+                <h2>03. 과학적 구조: 허니콤의 강성</h2>
+                <p class="lead">벌집 구조(Honeycomb)는 항공기 소재로 쓰일 만큼 완벽한 하중 분산 능력을 가집니다.</p>
+                <p class="detail">외부에서 가해지는 힘을 120도 각도의 세 방향으로 균일하게 분산시켜, 비틀림이나 휨에 대해 압도적인 구조적 안정성을 제공합니다.</p>
+                <div class="highlight-box" style="border-left-color: var(--secondary);">
+                    <p class="detail" style="font-weight: 700; color: var(--secondary);">💡 건축적 적용 효과: 무주(No-Pillar) 공간 구현</p>
+                    <p class="detail">이 강력한 강성 덕분에 내부에 거추장스러운 기둥 없이 탁 트인 대형 실내 경기장(배드민턴, 농구 코트)을 안전하게 지을 수 있습니다.</p>
+                </div>
+            </div>
+            <div class="image-content" style="background-image: url('https://source.unsplash.com/featured/?honeycomb,structure,engineering');"></div>
+        </section>
 
-        canvas.addEventListener('mouseup', () => {
-            dragging = null;
-        });
+        <section class="slide">
+            <div class="text-content">
+                <h2>04. 누구를 위한 공간인가?</h2>
+                <p class="lead">오송의 다양한 구성원을 아우르는 열린 복합 문화 공간을 지향합니다.</p>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 30px;">
+                    <div>
+                        <h3 style="color: var(--primary); margin-bottom: 10px;">Target (대상)</h3>
+                        <ul style="list-style: none; padding-left: 10px;">
+                            <li style="margin-bottom: 10px;">👤 <b>직장인/연구원:</b> 퇴근 후 스포츠 리그</li>
+                            <li style="margin-bottom: 10px;">👪 <b>지역 주민:</b> 주말 가족 여가 활동</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h3 style="color: var(--primary); margin-bottom: 10px;">Usage (활용)</h3>
+                        <ul style="list-style: none; padding-left: 10px;">
+                            <li style="margin-bottom: 10px;">🏀 <b>가변형 코트:</b> 다양한 종목 수용</li>
+                            <li style="margin-bottom: 10px;">🎤 <b>커뮤니티:</b> 전시, 컨퍼런스 활용</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="image-content" style="background-image: url('https://source.unsplash.com/featured/?indoor,sports,gym,people');"></div>
+        </section>
 
-        drawShapes();
-    </script>
+        <section class="slide">
+            <div class="text-content">
+                <h2>05. 오송에 주는 가치 (Value)</h2>
+                <p class="lead">단순한 건축을 넘어 오송의 지속 가능한 미래 경쟁력을 확보합니다.</p>
+                <div class="highlight-box">
+                    <p class="detail">💰 <b>경제적 가치:</b> 수학적 최적 설계를 통한 건축 자재 절감 및 에너지 효율 향상.</p>
+                    <p class="detail" style="margin-top: 15px;">🏛️ <b>도시 브랜드:</b> '과학이 설계한 도시'라는 독창적인 랜드마크 확보.</p>
+                    <p class="detail" style="margin-top: 15px;">🛡️ <b>사회적 안전:</b> 재난 시 높은 구조적 강성을 활용한 지역 방재 거점으로 활용.</p>
+                </div>
+            </div>
+            <div class="image-content" style="background-image: url('https://source.unsplash.com/featured/?sustainable,city,architecture,green');"></div>
+        </section>
+
+        <section class="slide">
+            <div class="image-content" style="flex: none; width: 100%; position: absolute; top:0; left:0; z-index: 0; background-image: url('https://source.unsplash.com/featured/?night,architecture,landmark');"></div>
+            <div class="text-content" style="align-items: center; text-align: center; background: rgba(0,0,0,0.6); z-index: 1; color: white;">
+                <h1 style="color: var(--primary);">오송의 미래를 담는<br>가장 견고한 그릇</h1>
+                <p class="lead" style="color: #eee; max-width: 800px;">수학의 효율성과 과학의 안전함으로 설계된 벌집형 체육관은<br>오송 주민들의 삶을 지키는 가장 든든한 공간이 될 것입니다.</p>
+                <p style="margin-top: 50px; font-size: 1.5rem; font-weight: bold;">경청해 주셔서 감사합니다.</p>
+            </div>
+        </section>
+
+    </div>
+</div>
+
+<div class="controls">
+    <button class="btn" onclick="moveSlide(-1)">←</button>
+    <button class="btn" onclick="moveSlide(1)">→</button>
+</div>
+
+<script>
+    let currentSlide = 0;
+    const totalSlides = 7;
+    const slider = document.getElementById('slider');
+    const progressBar = document.getElementById('progress');
+
+    // 슬라이드 이동 함수
+    function moveSlide(direction) {
+        currentSlide = Math.max(0, Math.min(totalSlides - 1, currentSlide + direction));
+        updateSlider();
+    }
+
+    // 화면 업데이트 함수
+    function updateSlider() {
+        slider.style.transform = `translateX(-${currentSlide * 100}vw)`;
+        progressBar.style.width = `${((currentSlide + 1) / totalSlides) * 100}%`;
+    }
+
+    // 터치 스와이프 기능 (패드 최적화)
+    let touchStartX = 0;
+    let touchEndX = 0;
+
+    document.addEventListener('touchstart', e => {
+        touchStartX = e.changedTouches[0].screenX;
+    }, false);
+
+    document.addEventListener('touchend', e => {
+        touchEndX = e.changedTouches[0].screenX;
+        handleSwipe();
+    }, false);
+
+    function handleSwipe() {
+        if (touchEndX < touchStartX - 50) moveSlide(1); // 오른쪽으로 넘기기
+        if (touchEndX > touchStartX + 50) moveSlide(-1); // 왼쪽으로 넘기기
+    }
+
+    // 키보드 방향키 지원 (옵션)
+    document.addEventListener('keydown', (e) => {
+        if(e.key === 'ArrowRight') moveSlide(1);
+        if(e.key === 'ArrowLeft') moveSlide(-1);
+    });
+</script>
+
 </body>
 </html>
