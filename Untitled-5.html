@@ -1,123 +1,212 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <title>Mini 3D CAD</title>
-  <style>
-    body { margin: 0; overflow: hidden; }
-    #toolbar {
-      position: absolute;
-      top: 10px;
-      left: 10px;
-      z-index: 1;
-      background: rgba(255,255,255,0.8);
-      padding: 8px;
-      border-radius: 4px;
-    }
-    .tool-button {
-      padding: 6px 10px;
-      margin-right: 5px;
-      cursor: pointer;
-    }
-    .tool-button.active {
-      background-color: #0a84ff;
-      color: white;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>오송 벌집형 체육관 제안서</title>
+    <style>
+        @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+        
+        :root {
+            --primary: #FBC02D;
+            --secondary: #1A237E;
+            --bg: #ffffff;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: 'Pretendard', sans-serif; background: #000; color: #333; overflow: hidden; }
+
+        /* 전체 슬라이드 컨테이너 */
+        .slider {
+            display: flex;
+            width: 700vw; /* 슬라이드 7개 */
+            height: 100vh;
+            transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+
+        .slide {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background: var(--bg);
+            position: relative;
+        }
+
+        /* 이미지 영역 (상단) */
+        .img-area {
+            height: 45%;
+            background-size: cover;
+            background-position: center;
+            position: relative;
+        }
+        .img-area::after {
+            content: ""; position: absolute; bottom: 0; left: 0; width: 100%; height: 50px;
+            background: linear-gradient(to top, var(--bg), transparent);
+        }
+
+        /* 텍스트 영역 (하단) */
+        .text-area {
+            height: 55%;
+            padding: 40px 10%;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            text-align: left;
+        }
+
+        h1 { font-size: 3rem; color: var(--secondary); margin-bottom: 10px; font-weight: 800; line-height: 1.2; }
+        h2 { font-size: 2.2rem; color: var(--secondary); margin-bottom: 20px; border-left: 8px solid var(--primary); padding-left: 15px; }
+        p { font-size: 1.3rem; line-height: 1.7; color: #555; margin-bottom: 15px; }
+        
+        .accent-box {
+            background: #f8f9fa; border-radius: 15px; padding: 25px;
+            margin-top: 15px; border: 1px solid #eee;
+        }
+
+        /* 하단 진행 바 */
+        .progress-container {
+            position: fixed; bottom: 0; left: 0; width: 100%; height: 8px; background: #eee; z-index: 100;
+        }
+        .progress-bar {
+            height: 100%; background: var(--primary); width: 14.28%; transition: width 0.3s;
+        }
+
+        /* 안내 문구 */
+        .guide {
+            position: fixed; top: 20px; right: 20px; background: rgba(0,0,0,0.5);
+            color: white; padding: 8px 15px; border-radius: 20px; font-size: 0.8rem; z-index: 100;
+        }
+    </style>
 </head>
 <body>
-  <div id="toolbar">
-    <button class="tool-button active" id="boxTool">박스</button>
-    <button class="tool-button" id="selectTool">선택/이동</button>
-  </div>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r126/three.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r126/examples/js/controls/OrbitControls.js"></script>
-  <script>
-    const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0xf0f0f0);
 
-    const camera = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, 0.1, 1000);
-    camera.position.set(50, 50, 50);
-    camera.lookAt(scene.position);
+<div class="guide">손으로 밀어서 넘기세요 ↔</div>
+<div class="progress-container"><div class="progress-bar" id="bar"></div></div>
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    document.body.appendChild(renderer.domElement);
+<div class="slider" id="slider">
+    <section class="slide">
+        <div class="img-area" style="background-image: url('https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&w=1200&q=80');"></div>
+        <div class="text-area">
+            <p style="color: var(--primary); font-weight: bold; margin-bottom: 5px;">ARCHITECTURE PROPOSAL</p>
+            <h1>오송 벌집형<br>커뮤니티 체육관</h1>
+            <p>수학적 최적화와 과학적 강성이 만난 미래형 랜드마크</p>
+            <p style="margin-top: 20px; font-weight: bold;">발표자: OOO</p>
+        </div>
+    </section>
 
-    const controls = new THREE.OrbitControls(camera, renderer.domElement);
+    <section class="slide">
+        <div class="img-area" style="background-image: url('https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=1200&q=80');"></div>
+        <div class="text-area">
+            <h2>01. 기획 배경</h2>
+            <p>오송은 국가 바이오 산업의 심장부입니다. 이 지역의 정체성을 담은 <b>스마트한 공공 건축물</b>이 필요합니다.</p>
+            <div class="accent-box">
+                <p>• 바이오 기술력을 상징하는 혁신적 디자인</p>
+                <p>• 급격히 늘어나는 정주 인구를 위한 생활 체육 거점</p>
+            </div>
+        </div>
+    </section>
 
-    // 바닥 그리드
-    const grid = new THREE.GridHelper(100, 20);
-    scene.add(grid);
+    <section class="slide">
+        <div class="img-area" style="background-image: url('https://images.unsplash.com/photo-1550684848-fac1c5b4e853?auto=format&fit=crop&w=1200&q=80');"></div>
+        <div class="text-area">
+            <h2>02. 수리적 원리: 최적화</h2>
+            <p><b>테셀레이션(Tessellation)</b> 기법을 활용하여 공간 효율을 극대화했습니다.</p>
+            
+            <div class="accent-box">
+                <p>정육각형은 동일한 재료로 평면을 채울 때 <b>가장 넓은 면적</b>을 확보할 수 있는 수학적으로 가장 경제적인 도형입니다.</p>
+                <p style="font-family: serif; font-weight: bold; font-size: 1.5rem; margin-top: 10px;">$A = \frac{3\sqrt{3}}{2}s^2$</p>
+            </div>
+        </div>
+    </section>
 
-    // 조명
-    const ambient = new THREE.AmbientLight(0xffffff, 0.6);
-    scene.add(ambient);
-    const directional = new THREE.DirectionalLight(0xffffff, 0.8);
-    directional.position.set(50, 100, 50);
-    scene.add(directional);
+    <section class="slide">
+        <div class="img-area" style="background-image: url('https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=1200&q=80');"></div>
+        <div class="text-area">
+            <h2>03. 과학적 원리: 강성</h2>
+            <p>벌집 구조(Honeycomb)는 자연이 설계한 가장 튼튼한 구조입니다.</p>
+            
+            <div class="accent-box">
+                <p><b>하중 분산:</b> 120도의 세 방향으로 힘을 분산시켜 외부 충격에 매우 강합니다. 이 덕분에 내부 기둥이 없는 <b>대형 실내 경기장</b>을 안전하게 구축할 수 있습니다.</p>
+            </div>
+        </div>
+    </section>
 
-    let currentTool = 'box';
-    const toolButtons = document.querySelectorAll('.tool-button');
-    toolButtons.forEach(btn =>
-      btn.addEventListener('click', () => {
-        currentTool = btn.id === 'boxTool' ? 'box' : 'select';
-        toolButtons.forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-      })
-    );
+    <section class="slide">
+        <div class="img-area" style="background-image: url('https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=1200&q=80');"></div>
+        <div class="text-area">
+            <h2>04. 활용 대상</h2>
+            <p>오송의 모든 구성원이 함께 사용하는 열린 공간입니다.</p>
+            <div style="display: flex; gap: 20px;">
+                <div class="accent-box" style="flex: 1;">
+                    <p><b>연구원/직장인</b><br>퇴근 후 스포츠 리그 및 체력 단련</p>
+                </div>
+                <div class="accent-box" style="flex: 1;">
+                    <p><b>지역 주민</b><br>주말 가족 스포츠 및 커뮤니티 행사</p>
+                </div>
+            </div>
+        </div>
+    </section>
 
-    let selectedObj = null;
-    const raycaster = new THREE.Raycaster();
-    const mouse = new THREE.Vector2();
+    <section class="slide">
+        <div class="img-area" style="background-image: url('https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1200&q=80');"></div>
+        <div class="text-area">
+            <h2>05. 기대 효과</h2>
+            <p>건축적 아름다움과 실용성을 동시에 잡았습니다.</p>
+            <div class="accent-box">
+                <p><b>1. 경제성:</b> 자재 낭비를 줄여 공사비 15% 절감</p>
+                <p><b>2. 상징성:</b> 바이오 도시 오송의 랜드마크 확보</p>
+                <p><b>3. 안전성:</b> 강력한 구조를 활용한 비상시 방재 센터</p>
+            </div>
+        </div>
+    </section>
 
-    window.addEventListener('mousedown', (e) => {
-      mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
-      mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+    <section class="slide" style="background: var(--secondary); color: white;">
+        <div class="text-area" style="height: 100%; justify-content: center; align-items: center; text-align: center;">
+            <h1 style="color: var(--primary); font-size: 4rem;">감사합니다</h1>
+            <p style="color: #ddd; font-size: 1.5rem;">수학과 과학으로 지은 오송의 새로운 활력소</p>
+            <div style="font-size: 5rem; margin-top: 30px;">⬢</div>
+        </div>
+    </section>
+</div>
 
-      raycaster.setFromCamera(mouse, camera);
+<script>
+    let currentSlide = 0;
+    const totalSlides = 7;
+    const slider = document.getElementById('slider');
+    const bar = document.getElementById('bar');
 
-      if (currentTool === 'box') {
-        const geometry = new THREE.BoxGeometry(10, 10, 10);
-        const material = new THREE.MeshLambertMaterial({ color: 0x2194ce });
-        const box = new THREE.Mesh(geometry, material);
-        const intersect = raycaster.intersectObject(grid, true)[0];
-        if (intersect) {
-          box.position.copy(intersect.point).add(new THREE.Vector3(0, 5, 0));
-        }
-        scene.add(box);
-      } else if (currentTool === 'select') {
-        const intersects = raycaster.intersectObjects(scene.children, true);
-        selectedObj = intersects.length > 0 ? intersects[0].object : null;
-      }
+    let startX = 0;
+    let isMoving = false;
+
+    // 터치 시작
+    document.addEventListener('touchstart', e => {
+        startX = e.touches[0].clientX;
+        isMoving = true;
     });
 
-    window.addEventListener('mousemove', (e) => {
-      if (selectedObj && currentTool === 'select') {
-        mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
-        mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
-        raycaster.setFromCamera(mouse, camera);
-        const intersect = raycaster.intersectObject(grid, true)[0];
-        if (intersect) {
-          selectedObj.position.copy(intersect.point).add(new THREE.Vector3(0, selectedObj.geometry.boundingBox.getSize(new THREE.Vector3()).y/2, 0));
+    // 터치 끝 (스와이프 판단)
+    document.addEventListener('touchend', e => {
+        if (!isMoving) return;
+        const endX = e.changedTouches[0].clientX;
+        const diff = startX - endX;
+
+        if (Math.abs(diff) > 50) { // 50px 이상 밀었을 때만 작동
+            if (diff > 0 && currentSlide < totalSlides - 1) {
+                currentSlide++;
+            } else if (diff < 0 && currentSlide > 0) {
+                currentSlide--;
+            }
+            updateSlide();
         }
-      }
+        isMoving = false;
     });
 
-    window.addEventListener('mouseup', () => selectedObj = null);
-
-    function animate() {
-      requestAnimationFrame(animate);
-      controls.update();
-      renderer.render(scene, camera);
+    function updateSlide() {
+        slider.style.transform = `translateX(-${currentSlide * 100}vw)`;
+        bar.style.width = `${((currentSlide + 1) / totalSlides) * 100}%`;
     }
-    animate();
+</script>
 
-    window.addEventListener('resize', () => {
-      camera.aspect = window.innerWidth/window.innerHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(window.innerWidth, window.innerHeight);
-    });
-  </script>
 </body>
 </html>
